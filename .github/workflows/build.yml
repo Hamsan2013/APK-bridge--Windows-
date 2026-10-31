@@ -44,7 +44,8 @@ jobs:
           -o publish
 
       - name: Build EXE installer
-        run: '"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer/APKDesktopBridge.iss'
+        run: '"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\APKDesktopBridge.iss'
+        shell: cmd
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
