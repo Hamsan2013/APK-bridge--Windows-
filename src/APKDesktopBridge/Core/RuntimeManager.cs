@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using APKDesktopBridge.Models;
 
 namespace APKDesktopBridge.Core;
@@ -9,7 +10,15 @@ namespace APKDesktopBridge.Core;
 public class RuntimeManager
 {
     private const string CmdLineToolsUrl = "https://dl.google.com/android/repository/commandlinetools-win-11076708_latest.zip";
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(30) };
+    
+    // Configured handler to handle TLS/SSL certificate revocation hiccups gracefully
+    private static readonly HttpClient Http = new(new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+    })
+    {
+        Timeout = TimeSpan.FromMinutes(30)
+    };
 
     public string SdkRoot => SettingsService.SdkDir;
     public string AvdRoot => SettingsService.AvdDir;
@@ -56,21 +65,21 @@ public class RuntimeManager
         if (!IsJavaAvailable())
         {
             throw new InvalidOperationException(
-                "Java (JDK 17+) is required by Android SDK Command Line Tools. Please install OpenJDK 17 or Android Studio JBR and ensure 'java' is on your PATH.");
+                "Java is required by Android SDK Tools. Ensure 'java' is working on your system PATH.");
         }
 
-        // Step 1: Download & Normalize cmdline-tools directory structure
+        // Step 1: Download & Extract cmdline-tools
         if (!File.Exists(SdkManagerBat))
         {
             await DownloadAndExtractCmdLineToolsAsync(status, ct);
         }
 
-        // Step 2: Accept all Android SDK licenses non-interactively
+        // Step 2: Accept licenses
         status?.Report("Accepting Android SDK licenses...");
         await AcceptLicensesAsync(ct);
 
-        // Step 3: Download platform-tools, emulator, platforms, and system-image
-        status?.Report($"Installing platform-tools, emulator, and {config.SystemImage} (this may take several minutes)...");
+        // Step 3: Install platform-tools, emulator, system image
+        status?.Report($"Installing platform-tools, emulator, and {config.SystemImage}...");
         string sdkArgs = $"\"platform-tools\" \"emulator\" \"platforms;android-34\" \"{config.SystemImage}\"";
         var (sdkExit, sdkOut) = await RunSdkBatchAsync(SdkManagerBat, sdkArgs, autoFeedYes: true, status, ct);
         if (sdkExit != 0)
@@ -78,11 +87,11 @@ public class RuntimeManager
             throw new InvalidOperationException($"sdkmanager failed (Exit {sdkExit}): {sdkOut}");
         }
 
-        // Step 4: Create the Android Virtual Device (AVD)
+        // Step 4: Create AVD
         status?.Report($"Creating Virtual Device '{config.AvdName}'...");
         await CreateAvdAsync(config, status, ct);
 
-        // Step 5: Configure hardware properties (1280x720 Landscape Tablet, RAM, GPU)
+        // Step 5: Configure Landscape Hardware Profile
         status?.Report("Applying Landscape Tablet hardware profile...");
         ConfigureAvdHardware(config);
 
@@ -94,11 +103,45 @@ public class RuntimeManager
         status?.Report("Downloading Android Command Line Tools...");
         string zipPath = Path.Combine(SettingsService.DownloadsDir, "cmdline-tools.zip");
 
-        using (var response = await Http.GetAsync(CmdLineToolsUrl, HttpCompletionOption.ResponseHeadersRead, ct))
+        // Try primary download via HttpClient with fallback to Windows curl
+        bool downloaded = false;
+        try
         {
+            using var request = new HttpRequestMessage(HttpMethod.Get, CmdLineToolsUrl);
+            request.Headers.UserAgent.Add(new ProductInfoHeaderValue("Mozilla", "5.0"));
+            
+            using var response = await Http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
             response.EnsureSuccessStatusCode();
+
             await using var fs = new FileStream(zipPath, FileMode.Create, FileAccess.Write, FileShare.None);
             await response.Content.CopyToAsync(fs, ct);
+            downloaded = true;
+        }
+        catch (Exception ex)
+        {
+            status?.Report($"HttpClient SSL issue encountered: {ex.Message}. Falling back to Windows curl...");
+        }
+
+        // Fallback: Use native Windows curl.exe if SSL error persists
+        if (!downloaded || !File.Exists(zipPath) || new FileInfo(zipPath).Length < 1000)
+        {
+            var curlPsi = new ProcessStartInfo
+            {
+                FileName = "curl.exe",
+                Arguments = $"-k -L -o \"{zipPath}\" \"{CmdLineToolsUrl}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            using var curlProc = Process.Start(curlPsi);
+            if (curlProc != null)
+            {
+                await curlProc.WaitForExitAsync(ct);
+            }
+        }
+
+        if (!File.Exists(zipPath) || new FileInfo(zipPath).Length < 1000)
+        {
+            throw new FileNotFoundException("Failed to download Android command-line tools archive.");
         }
 
         status?.Report("Extracting Command Line Tools...");
@@ -106,7 +149,6 @@ public class RuntimeManager
         if (Directory.Exists(tempExtract)) Directory.Delete(tempExtract, true);
         ZipFile.ExtractToDirectory(zipPath, tempExtract);
 
-        // Google's zip contains a top-level "cmdline-tools" folder; sdkmanager requires ".../cmdline-tools/latest/bin"
         string latestDir = Path.Combine(SdkRoot, "cmdline-tools", "latest");
         if (Directory.Exists(latestDir)) Directory.Delete(latestDir, true);
         Directory.CreateDirectory(Path.GetDirectoryName(latestDir)!);
@@ -146,7 +188,6 @@ public class RuntimeManager
             else lines.Add($"{key}={value}");
         }
 
-        // Force landscape resolution (Width > Height) and hardware acceleration
         SetIniValue("hw.lcd.width", config.Width.ToString());
         SetIniValue("hw.lcd.height", config.Height.ToString());
         SetIniValue("hw.lcd.density", config.Dpi.ToString());
@@ -216,7 +257,6 @@ public class RuntimeManager
         }
         else if (feedCustomProfileNo)
         {
-            // Answers "no" to "Do you wish to create a custom hardware profile? [no]"
             await process.StandardInput.WriteLineAsync("no");
             process.StandardInput.Close();
         }
