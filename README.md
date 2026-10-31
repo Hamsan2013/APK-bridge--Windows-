@@ -95,7 +95,9 @@ dotnet publish src/APKDesktopBridge/APKDesktopBridge.csproj `
   -p:PublishSingleFile=true `
   -p:IncludeNativeLibrariesForSelfExtract=true `
   -o publish
-## 🗂️ Architecture & Directory Structure
+
+
+### 🗂️ Architecture & Directory Structure
 
 Application files and Android SDK data are cleanly separated so the runtime can update without requiring administrator privileges:
 
@@ -111,7 +113,7 @@ C:\Program Files\APK Desktop Bridge\
 ├── Logs\                         # Diagnostic logs
 └── Settings\
     └── appsettings.json          # User configuration & installed app library
-##🤝 Contributing & Reporting Bugs
+###🤝 Contributing & Reporting Bugs
 This project is currently in Pre-Release Beta! If you find a bug, have a feature idea, or want to contribute:
 Check the [suspicious link removed] tab and open a new issue with your error details or screenshot.
 Fork the repository, create a feature branch, and submit a Pull Request.
