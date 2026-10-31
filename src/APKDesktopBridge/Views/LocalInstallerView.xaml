@@ -1,0 +1,34 @@
+  <UserControl x:Class="APKDesktopBridge.Views.LocalInstallerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             AllowDrop="True"
+             Drop="OnApkFileDrop"
+             DragOver="OnApkDragOver">
+    <Grid Margin="32">
+        <StackPanel>
+            <TextBlock Text="Local APK File Installer" FontSize="24" FontWeight="Bold" Foreground="#F8FAFC"/>
+            <TextBlock Text="Browse your laptop via Windows File Explorer or drag and drop an .apk file below." Foreground="#94A3B8" Margin="0,4,0,20"/>
+
+            <Border BorderBrush="#334155" BorderThickness="2" CornerRadius="12" Background="#1E293B" Padding="36">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="Drop .APK file here or browse from computer" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <Button Content="Open File Explorer (.apk)" Click="OnBrowseFilesClick" Width="220" Margin="0,16,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border x:Name="MetadataCard" Visibility="Collapsed" Background="#1E293B" CornerRadius="10" Padding="20" Margin="0,20,0,0">
+                <StackPanel>
+                    <TextBlock x:Name="TxtAppName" FontSize="18" FontWeight="Bold" Foreground="#38BDF8"/>
+                    <TextBlock x:Name="TxtFilePath" FontSize="12" Foreground="#94A3B8" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="TxtSha256" FontSize="11" Foreground="#64748B" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="TxtArchWarning" FontSize="12" Foreground="#F59E0B" Margin="0,6,0,0"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                        <Button Content="INSTALL &amp; LAUNCH IN LANDSCAPE" Click="OnInstallLocalApkClick" Background="#10B981" Width="260"/>
+                        <TextBlock x:Name="TxtInstallStatus" VerticalAlignment="Center" Margin="16,0,0,0" Foreground="#F8FAFC"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>
