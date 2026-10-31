@@ -1,0 +1,23 @@
+  <UserControl x:Class="APKDesktopBridge.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="32">
+        <StackPanel>
+            <TextBlock Text="Application Settings" FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="Storage paths for APK downloads, Android SDK, and Virtual Devices." Foreground="#94A3B8" Margin="0,4,0,20"/>
+
+            <Border Background="#1E293B" CornerRadius="10" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="LocalAppData Root Directory:" Foreground="#94A3B8"/>
+                    <TextBox x:Name="TxtRootDir" IsReadOnly="True" Margin="0,4,0,12"/>
+
+                    <TextBlock Text="Android SDK Path:" Foreground="#94A3B8"/>
+                    <TextBox x:Name="TxtSdkDir" IsReadOnly="True" Margin="0,4,0,12"/>
+
+                    <TextBlock Text="Downloads Cache Path:" Foreground="#94A3B8"/>
+                    <TextBox x:Name="TxtDownloadsDir" IsReadOnly="True" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>
