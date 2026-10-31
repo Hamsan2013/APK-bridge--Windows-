@@ -1,4 +1,4 @@
-  <Window x:Class="APKDesktopBridge.MainWindow"
+<Window x:Class="APKDesktopBridge.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="APK Desktop Bridge" Height="680" Width="1080"
@@ -21,6 +21,7 @@
                 <StackPanel DockPanel.Dock="Top">
                     <Button Content="Home Dashboard" Click="NavHome_Click" Margin="0,4" Background="Transparent" HorizontalContentAlignment="Left"/>
                     <Button Content="Local File Sideload" Click="NavLocal_Click" Margin="0,4" Background="Transparent" HorizontalContentAlignment="Left"/>
+                    <Button Content="Emulator File Transfer" Click="NavFileTransfer_Click" Margin="0,4" Background="Transparent" HorizontalContentAlignment="Left"/>
                     <Button Content="GitHub Browser" Click="NavGitHub_Click" Margin="0,4" Background="Transparent" HorizontalContentAlignment="Left"/>
                     <Button Content="Direct URL Installer" Click="NavDirect_Click" Margin="0,4" Background="Transparent" HorizontalContentAlignment="Left"/>
                     <Button Content="App Library" Click="NavLibrary_Click" Margin="0,4" Background="Transparent" HorizontalContentAlignment="Left"/>
