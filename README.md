@@ -46,10 +46,10 @@ So, I built **APK Desktop Bridge**—a clean, open-source Windows desktop applic
 ## 📥 Quick Start (How to Install & Use)
 
 1. **Download the Installer:**
-   * Go to the [**Releases**](../../releases) page.
+   * Go to the [**Releases**](https://github.com/Hamsan2013/APK-bridge--Windows-/releases) page.
    * Expand **Assets** and download **`APKDesktopBridge-Setup.exe`**.
 2. **Run Setup:**
-   * Double-click `APKDesktopBridge-Setup.exe`. *(If Windows SmartScreen appears, click **More info** $\rightarrow$ **Run anyway**).*
+   * Double-click `APKDesktopBridge-Setup.exe`. *(If Windows SmartScreen appears, click **More info** -> **Run anyway**).*
 3. **Start the Landscape Emulator:**
    * Open **APK Desktop Bridge** and click **Runtime & Display** on the sidebar.
    * Click the green **Start Landscape Emulator** button.
@@ -79,7 +79,7 @@ So, I built **APK Desktop Bridge**—a clean, open-source Windows desktop applic
 
 ```powershell
 # 1. Clone the repository
-git clone [https://github.com/Hamsan2013/APK-bridge--Windows-.git](https://github.com/Hamsan2013/APK-bridge--Windows-.git)
+git clone https://github.com/Hamsan2013/APK-bridge--Windows-.git
 cd APK-bridge--Windows-
 
 # 2. Restore, build, and run automated unit tests
@@ -95,9 +95,11 @@ dotnet publish src/APKDesktopBridge/APKDesktopBridge.csproj `
   -p:PublishSingleFile=true `
   -p:IncludeNativeLibrariesForSelfExtract=true `
   -o publish
+```
 
+---
 
-### 🗂️ Architecture & Directory Structure
+## 🗂️ Architecture & Directory Structure
 
 Application files and Android SDK data are cleanly separated so the runtime can update without requiring administrator privileges:
 
@@ -113,11 +115,22 @@ C:\Program Files\APK Desktop Bridge\
 ├── Logs\                         # Diagnostic logs
 └── Settings\
     └── appsettings.json          # User configuration & installed app library
-###🤝 Contributing & Reporting Bugs
-This project is currently in Pre-Release Beta! If you find a bug, have a feature idea, or want to contribute:
-Check the [suspicious link removed] tab and open a new issue with your error details or screenshot.
-Fork the repository, create a feature branch, and submit a Pull Request.
-If you find APK Desktop Bridge useful, please click the ⭐ Star button at the top right of this repository to help more people discover it!
-##📄 License
-Distributed under the MIT License.
-Android SDK tools and system images are governed by the Google Android Software Development Kit License Agreement.
+```
+
+---
+
+## 🤝 Contributing & Reporting Bugs
+
+This project is currently in **Pre-Release Beta**! If you find a bug, have a feature idea, or want to contribute:
+
+1. Open the [**Issues**](https://github.com/Hamsan2013/APK-bridge--Windows-/issues) tab and create a new issue with your error details or screenshot.
+2. Fork the repository, create a feature branch, and submit a Pull Request.
+
+If you find **APK Desktop Bridge** useful, please click the **⭐ Star** button at the top right of this repository to help more people discover it!
+
+---
+
+## 📄 License
+
+Distributed under the **MIT License**.  
+*Android SDK tools and system images are governed by the Google Android Software Development Kit License Agreement.*
