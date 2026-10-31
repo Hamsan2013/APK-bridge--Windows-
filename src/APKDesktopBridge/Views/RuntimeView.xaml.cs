@@ -1,4 +1,4 @@
-  using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using APKDesktopBridge.Core;
 
@@ -8,36 +8,79 @@ public partial class RuntimeView : UserControl
 {
     private readonly RuntimeManager _runtime = new();
     private readonly EmulatorService _emulator = new();
+    private readonly DisplayManager _display = new();
 
     public RuntimeView()
     {
         InitializeComponent();
-        TxtRuntimeState.Text = _runtime.IsPlatformToolsInstalled()
-            ? "Android Platform-Tools (ADB) detected in LocalAppData."
-            : "Android SDK not yet installed. Click 'Download Android SDK Tools' to provision.";
+        RefreshStatus();
+    }
+
+    private void RefreshStatus()
+    {
+        var settings = SettingsService.Load();
+        bool ready = _runtime.IsFullRuntimeReady(settings.Runtime);
+        TxtRuntimeState.Text = ready
+            ? $"Runtime Ready: AVD '{settings.Runtime.AvdName}' configured ({settings.Runtime.Width}×{settings.Runtime.Height} Landscape)."
+            : "Android Runtime or Virtual Device not yet provisioned.";
     }
 
     private async void OnSetupSdkClick(object sender, RoutedEventArgs e)
     {
         var confirm = MessageBox.Show(
-            "Do you accept the Android SDK License Terms to download the Android Command Line Tools?",
-            "Android SDK License Acceptance",
+            "This will download the official Android SDK, Platform-Tools, Emulator, and Android 14 x86_64 system image (~1.5 GB) into LocalAppData.\n\nDo you accept the Android SDK License Agreement?",
+            "Accept Android SDK License",
             MessageBoxButton.YesNo,
-            MessageBoxImage.Information);
+            MessageBoxImage.Question);
 
         if (confirm != MessageBoxResult.Yes) return;
 
-        var progress = new Progress<string>(msg => TxtRuntimeState.Text = msg);
-        await _runtime.DownloadCommandLineToolsAsync(progress);
+        BtnProvision.IsEnabled = false;
+        TxtConsoleLog.Clear();
+
+        var settings = SettingsService.Load();
+        string preset = CmbResolution.SelectedIndex == 1 ? "1080p" : "720p";
+        await _display.ApplyPresetAsync(settings.Runtime, preset);
+        SettingsService.Save(settings);
+
+        var progress = new Progress<string>(line =>
+        {
+            TxtRuntimeState.Text = line;
+            TxtConsoleLog.AppendText(line + Environment.NewLine);
+            TxtConsoleLog.ScrollToEnd();
+        });
+
+        try
+        {
+            await _runtime.ProvisionCompleteRuntimeAsync(settings.Runtime, progress);
+            RefreshStatus();
+        }
+        catch (Exception ex)
+        {
+            TxtConsoleLog.AppendText($"[ERROR] {ex.Message}{Environment.NewLine}");
+            MessageBox.Show(ex.Message, "Provisioning Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            BtnProvision.IsEnabled = true;
+        }
     }
 
-    private void OnLaunchEmulatorClick(object sender, RoutedEventArgs e)
+    private async void OnLaunchEmulatorClick(object sender, RoutedEventArgs e)
     {
         var settings = SettingsService.Load();
+        string preset = CmbResolution.SelectedIndex == 1 ? "1080p" : "720p";
+        await _display.ApplyPresetAsync(settings.Runtime, preset);
+        SettingsService.Save(settings);
+
         bool started = _emulator.LaunchEmulator(settings.Runtime);
         if (!started)
         {
-            MessageBox.Show("Emulator binary not found yet. Finish SDK provisioning first.", "Emulator Not Found");
+            MessageBox.Show(
+                "Emulator executable not found. Click 'Auto-Provision SDK & Create AVD' first.",
+                "Emulator Missing",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
         }
     }
 }
