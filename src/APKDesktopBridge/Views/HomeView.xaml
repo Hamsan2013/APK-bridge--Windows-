@@ -1,0 +1,36 @@
+  <UserControl x:Class="APKDesktopBridge.Views.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="32">
+        <StackPanel>
+            <TextBlock Text="APK Desktop Bridge" FontSize="28" FontWeight="Bold" Foreground="#F8FAFC"/>
+            <TextBlock Text="Install and run Android Local AI apps directly on Windows in Landscape" FontSize="14" Foreground="#94A3B8" Margin="0,4,0,28"/>
+
+            <UniformGrid Columns="3" Margin="0,0,0,28">
+                <Border Background="#1E293B" CornerRadius="10" Padding="20" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="Local File Sideload" FontSize="16" FontWeight="Bold" Foreground="#38BDF8"/>
+                        <TextBlock Text="Pick an APK from File Explorer or drag and drop it." Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,8,0,16" FontSize="12"/>
+                        <Button Content="Select Local APK" Click="BtnOpenLocal_Click"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#1E293B" CornerRadius="10" Padding="20" Margin="6,0,6,0">
+                    <StackPanel>
+                        <TextBlock Text="GitHub APK Browser" FontSize="16" FontWeight="Bold" Foreground="#38BDF8"/>
+                        <TextBlock Text="Fetch APK releases directly from GitHub repositories." Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,8,0,16" FontSize="12"/>
+                        <Button Content="Browse GitHub" Click="BtnOpenGitHub_Click"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="#1E293B" CornerRadius="10" Padding="20" Margin="12,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Direct APK Link" FontSize="16" FontWeight="Bold" Foreground="#38BDF8"/>
+                        <TextBlock Text="Paste an HTTPS link to download, verify SHA-256, and install." Foreground="#94A3B8" TextWrapping="Wrap" Margin="0,8,0,16" FontSize="12"/>
+                        <Button Content="Paste APK URL" Click="BtnOpenDirect_Click"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+        </StackPanel>
+    </Grid>
+</UserControl>
