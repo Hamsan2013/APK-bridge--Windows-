@@ -1,4 +1,4 @@
-  using System.IO;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using APKDesktopBridge.Core;
@@ -10,11 +10,16 @@ public partial class LocalInstallerView : UserControl
 {
     private readonly LocalAPKService _localApkService = new();
     private readonly ADBService _adbService = new();
+    private readonly EmulatorService _emulatorService = new();
     private APKInfo? _currentApk;
 
-    public LocalInstallerView()
+    public LocalInstallerView(string? initialApkPath = null)
     {
         InitializeComponent();
+        if (!string.IsNullOrEmpty(initialApkPath))
+        {
+            _ = LoadFileAsync(initialApkPath);
+        }
     }
 
     private async void OnBrowseFilesClick(object sender, RoutedEventArgs e)
@@ -30,15 +35,12 @@ public partial class LocalInstallerView : UserControl
     {
         if (e.Data.GetDataPresent(DataFormats.FileDrop))
         {
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (files.Length > 0 && Path.GetExtension(files[0]).Equals(".apk", StringComparison.OrdinalIgnoreCase))
-            {
-                e.Effects = DragDropEffects.Copy;
-                e.Handled = true;
-                return;
-            }
+            e.Effects = DragDropEffects.Copy;
         }
-        e.Effects = DragDropEffects.None;
+        else
+        {
+            e.Effects = DragDropEffects.None;
+        }
         e.Handled = true;
     }
 
@@ -47,9 +49,13 @@ public partial class LocalInstallerView : UserControl
         if (e.Data.GetDataPresent(DataFormats.FileDrop))
         {
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            if (files.Length > 0)
+            if (files.Length > 0 && Path.GetExtension(files[0]).Equals(".apk", StringComparison.OrdinalIgnoreCase))
             {
                 await LoadFileAsync(files[0]);
+            }
+            else
+            {
+                MessageBox.Show("Please drop a valid .apk file (use 'Emulator File Transfer' in the sidebar for non-APK files).", "Not an APK", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
     }
@@ -69,7 +75,7 @@ public partial class LocalInstallerView : UserControl
         TxtSha256.Text = $"SHA-256: {info.Sha256}";
         TxtArchWarning.Text = meta.SupportsX86_64
             ? "Architecture: Compatible with x86_64 Emulator"
-            : "Warning: APK contains ARM64 native libraries only. Verify ABI translation support on your system image.";
+            : "Warning: APK contains ARM64 native libraries only.";
 
         MetadataCard.Visibility = Visibility.Visible;
         TxtInstallStatus.Text = "Ready to install.";
@@ -79,15 +85,26 @@ public partial class LocalInstallerView : UserControl
     {
         if (_currentApk == null) return;
 
-        var confirm = MessageBox.Show(
-            $"Install '{_currentApk.Name}' onto the Android Emulator?",
-            "Confirm APK Installation",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+        // If emulator is not running, automatically boot it for the user!
+        if (!await _adbService.IsDeviceConnectedAsync())
+        {
+            var settings = SettingsService.Load();
+            TxtInstallStatus.Text = "Starting Android Emulator automatically...";
+            if (!_emulatorService.LaunchEmulator(settings.Runtime))
+            {
+                MessageBox.Show("Emulator is not provisioned yet. Please run 'Auto-Provision SDK' in Runtime & Display first.", "Runtime Needed");
+                return;
+            }
 
-        if (confirm != MessageBoxResult.Yes) return;
+            // Wait up to 45 seconds for ADB connection
+            for (int i = 0; i < 15; i++)
+            {
+                await Task.Delay(3000);
+                if (await _adbService.IsDeviceConnectedAsync()) break;
+            }
+        }
 
-        TxtInstallStatus.Text = "Installing via ADB...";
+        TxtInstallStatus.Text = "Installing APK via ADB...";
         var (success, message) = await _adbService.InstallApkAsync(_currentApk.LocalPath);
         TxtInstallStatus.Text = message;
 
