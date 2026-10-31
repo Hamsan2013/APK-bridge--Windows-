@@ -1,0 +1,16 @@
+  <UserControl x:Class="APKDesktopBridge.Views.DirectURLView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="32">
+        <StackPanel>
+            <TextBlock Text="Direct APK URL Installer" FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="Download an APK from a trusted HTTPS URL, compute its SHA-256 hash, and install." Foreground="#94A3B8" Margin="0,4,0,16"/>
+
+            <TextBox x:Name="TxtUrl" Text="https://example.com/app.apk" Margin="0,0,0,12"/>
+            <ProgressBar x:Name="DownloadProgress" Height="10" Minimum="0" Maximum="100" Margin="0,0,0,16"/>
+
+            <Button Content="Download, Verify &amp; Install" Click="OnDownloadDirectClick" HorizontalAlignment="Left"/>
+            <TextBlock x:Name="TxtDirectStatus" Foreground="#38BDF8" Margin="0,12,0,0" TextWrapping="Wrap"/>
+        </StackPanel>
+    </Grid>
+</UserControl>
