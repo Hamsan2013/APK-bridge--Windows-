@@ -1,4 +1,4 @@
-  using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 
 namespace APKDesktopBridge.Core;
@@ -30,6 +30,33 @@ public class ADBService
 
         bool success = exitCode == 0 && output.Contains("Success", StringComparison.OrdinalIgnoreCase);
         return (success, success ? "Installed successfully." : $"{output} {error}".Trim());
+    }
+
+    public async Task<(bool Success, string Message)> PushFileToEmulatorAsync(string localFilePath, string androidDestinationFolder)
+    {
+        if (!File.Exists(localFilePath))
+            return (false, "Selected local file does not exist.");
+
+        if (!File.Exists(AdbExecutablePath))
+            return (false, "ADB is not installed yet.");
+
+        if (!await IsDeviceConnectedAsync())
+            return (false, "Emulator is not running. Start the emulator first.");
+
+        // Ensure Android path uses forward slashes and ends cleanly
+        string cleanAndroidDir = androidDestinationFolder.Replace("\\", "/").Trim();
+        if (!cleanAndroidDir.StartsWith("/")) cleanAndroidDir = "/" + cleanAndroidDir;
+        if (!cleanAndroidDir.EndsWith("/")) cleanAndroidDir += "/";
+
+        // Create target directory inside Android emulator first
+        await RunAdbCommandAsync($"shell mkdir -p \"{cleanAndroidDir}\"");
+
+        string fileName = Path.GetFileName(localFilePath);
+        string fullRemotePath = $"{cleanAndroidDir}{fileName}";
+
+        var (exitCode, output, error) = await RunAdbCommandAsync($"push \"{localFilePath}\" \"{fullRemotePath}\"");
+        bool success = exitCode == 0;
+        return (success, success ? $"Saved to emulator: {fullRemotePath}" : $"Transfer failed: {output} {error}".Trim());
     }
 
     public async Task<bool> LaunchPackageAsync(string packageName)
