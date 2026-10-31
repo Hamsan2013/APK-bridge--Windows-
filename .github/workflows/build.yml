@@ -24,6 +24,17 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Determine Version Number
+        id: vars
+        shell: pwsh
+        run: |
+          if ("${{ github.ref }}" -like "refs/tags/v*") {
+            $ver = "${{ github.ref_name }}".TrimStart('v')
+          } else {
+            $ver = "1.0.0.0.2"
+          }
+          echo "APP_VERSION=$ver" >> $env:GITHUB_ENV
+
       - name: Restore
         run: dotnet restore APKDesktopBridge.slnx
 
@@ -43,8 +54,27 @@ jobs:
           -p:IncludeNativeLibrariesForSelfExtract=true
           -o publish
 
-      - name: Build EXE installer
-        run: '"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\APKDesktopBridge.iss'
+      - name: Pre-Download & Bundle ADB, SDK Tools, and Emulator Engine
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "bundled_sdk/cmdline-tools" | Out-Null
+          
+          Write-Host "1/3 Downloading Android Command-Line Tools..."
+          curl.exe -L -o cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-win-11076708_latest.zip"
+          Expand-Archive -Path cmdline-tools.zip -DestinationPath "bundled_sdk/cmdline-temp" -Force
+          Move-Item -Path "bundled_sdk/cmdline-temp/cmdline-tools" -Destination "bundled_sdk/cmdline-tools/latest" -Force
+          Remove-Item -Recurse -Force "bundled_sdk/cmdline-temp", "cmdline-tools.zip"
+
+          Write-Host "2/3 Accepting licenses & bundling ADB (platform-tools) + Emulator via sdkmanager..."
+          $sdkRoot = (Resolve-Path "bundled_sdk").Path
+          $sdkManager = Join-Path $sdkRoot "cmdline-tools\latest\bin\sdkmanager.bat"
+          
+          # Auto-accept licenses and download platform-tools (ADB) and emulator into bundled_sdk
+          1..30 | ForEach-Object { "y" } | & $sdkManager --sdk_root="$sdkRoot" --licenses
+          1..30 | ForEach-Object { "y" } | & $sdkManager --sdk_root="$sdkRoot" "platform-tools" "emulator"
+
+      - name: Build Ultra-Compressed EXE Installer
+        run: '"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=%APP_VERSION% installer\APKDesktopBridge.iss'
         shell: cmd
 
       - name: Upload installer artifact
