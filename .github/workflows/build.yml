@@ -25,13 +25,13 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore APKDesktopBridge.sln
+        run: dotnet restore APKDesktopBridge.slnx
 
       - name: Build
-        run: dotnet build APKDesktopBridge.sln -c Release --no-restore
+        run: dotnet build APKDesktopBridge.slnx -c Release --no-restore
 
       - name: Run tests
-        run: dotnet test APKDesktopBridge.sln -c Release --no-build
+        run: dotnet test APKDesktopBridge.slnx -c Release --no-build
 
       - name: Publish Windows application
         run: >
@@ -43,11 +43,8 @@ jobs:
           -p:IncludeNativeLibrariesForSelfExtract=true
           -o publish
 
-      - name: Install Inno Setup
-        run: choco install innosetup -y
-
       - name: Build EXE installer
-        run: iscc installer/APKDesktopBridge.iss
+        run: '"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer/APKDesktopBridge.iss'
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
